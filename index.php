@@ -2,7 +2,7 @@
 /* 
 Plugin Name: Agile CRM
 Plugin URI: #
-Version: v1.1
+Version: v1.2
 Author: Agile CRM
 Developer: Agile CRM
 Author URI: http://www.agilecrm.com
@@ -57,7 +57,7 @@ function agilecrm_list_agile_form(){
         $email= (esc_textarea(get_option( "agile_email" )));
         $rest_api = (esc_textarea(get_option( "agile_rest_api" )));
         if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("forms", null, "GET", "application/json",$email,$rest_api,$domain);
+           $result = agilecrm_get_data('forms', $domain, $email, $rest_api);
            if (version_compare(PHP_VERSION, '5.4.0', '>=') && !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {
             $result = json_decode($result,false, 512, JSON_BIGINT_AS_STRING);
            } else {
@@ -383,7 +383,7 @@ function agilecrm_webrules_page(){
          } ?>
 </div> 
 <?php if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("webrule", null, "GET", "application/json",$email,$rest_api,$domain);
+            $result = agilecrm_get_data('webrule', $domain, $email, $rest_api);           
            $result = json_decode($result, false);
            echo "<div class='crm-form-list' id='crmj'>"; ?>
              <div class='formbilder'><div class='add-forms'><a class='more' target='_blank' href="https://<?php echo $domain;?>.agilecrm.com/login#web-rules">Create Web rules</a>
@@ -493,7 +493,7 @@ function agilecrm_landing_page(){
         </div></div></div>
 </div>
 <?php    if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("landingpages", null, "GET", "application/json",$email,$rest_api,$domain);          
+            $result = agilecrm_get_data('landingpages', $domain, $email, $rest_api);           
            if (version_compare(PHP_VERSION, '5.4.0', '>=') && !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {
             $result = json_decode($result,false, 512, JSON_BIGINT_AS_STRING);
             } else {
@@ -640,7 +640,7 @@ function agilecrm_formbuilder_page(){
          } ?>
 </div>
 <?php if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("forms", null, "GET", "application/json",$email,$rest_api,$domain);
+            $result = agilecrm_get_data('forms', $domain, $email, $rest_api);           
            $result = json_decode($result, false);
            echo "<div class='crm-form-list'>";
            $i = 1; ?>
@@ -760,7 +760,7 @@ function agilecrm_email_page(){
 <div id="features">
 <div class="mainLeftbox" >
  <?php if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("workflows", null, "GET", "application/json",$email,$rest_api,$domain);
+            $result = agilecrm_get_data('workflows', $domain, $email, $rest_api);           
            $result = json_decode($result, false);
            echo "<div class='crm-form-list' id='crmj'>";
            $i = 1; ?>
@@ -833,13 +833,15 @@ function agilecrm_email_page(){
 function agilecrm_settings_page(){
     $deprecated = null;
     $autoload = 'no';
-   echo $getdoamin = sanitize_text_field($_GET["domain"]);
-
-    if($getdoamin){
+    if(isset($_GET['domain'])){
+        $getdoamin = sanitize_text_field($_GET["domain"]);
+    }
+   
+    if(isset($_GET['domain']) && $getdoamin){
         $domain = sanitize_text_field($_GET["domain"]);
         $email= sanitize_text_field($_GET["emailid"]);
         $password= sanitize_text_field($_GET["password"]);
-        $result = agilecrm_curl_wrap("api-key", null, "GET", "application/json",$email,$password,$domain);
+        $result = agilecrm_get_data('api-key', $domain, $email, $password);        
         $arr = json_decode($result, TRUE);
         extract($arr);
         $rest_api = $api_key;
@@ -878,12 +880,12 @@ function agilecrm_settings_page(){
           $errors = 'Please verify the above details given in the above fields';           
         }
       }
-    if($_POST["save"] && check_admin_referer( 'agilecrm_nonce_action', 'agilecrm_nonce_field' )){
+    if(isset($_POST['save']) && $_POST["save"] && check_admin_referer( 'agilecrm_nonce_action', 'agilecrm_nonce_field' )){
         $domain = sanitize_text_field($_POST["domain"]);        
         $email= sanitize_text_field($_POST["email"]);
         $password= sanitize_text_field($_POST["password"]);
 
-        $result = agilecrm_curl_wrap("alias/actual/".$domain, null, "GET", "application/json",$email,$password,$domain);
+        $result = agilecrm_get_data('alias/actual/'.$domain, $domain, $email, $password);           
         $response = json_decode($result,true);
         if($response['status'] == "401"){
           $errors = 'Please verify the above details given in the above fields';
@@ -891,8 +893,7 @@ function agilecrm_settings_page(){
         else{
           $domain = $result;
         }
-
-        $result = agilecrm_curl_wrap("api-key", null, "GET", "application/json",$email,$password,$domain);
+        $result = agilecrm_get_data('api-key', $domain, $email, $password);                   
         $arr = json_decode($result, TRUE);
         extract($arr);
         $rest_api = $api_key;
@@ -1066,7 +1067,7 @@ function agilecrm_page_post_box( $post ) {
         $email= (esc_textarea(get_option( "agile_email" )));
         $rest_api = (esc_textarea(get_option( "agile_rest_api" )));
 
-        $result = agilecrm_curl_wrap("landingpages", null, "GET", "application/json",$email,$rest_api,$domain);
+        $result = agilecrm_get_data('landingpages', $domain, $email, $rest_api);        
         if (version_compare(PHP_VERSION, '5.4.0', '>=') && !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {
             $result = json_decode($result,false, 512, JSON_BIGINT_AS_STRING);
             } else {
@@ -1136,7 +1137,7 @@ function agileform($atts,$content,$tag){
         $email= (esc_textarea(get_option( "agile_email" )));
         $rest_api = (esc_textarea(get_option( "agile_rest_api" )));
         if($domain != "" && $email != "" && $rest_api != ""){
-           $result = agilecrm_curl_wrap("forms/form?formId=".$atts["id"], null, "GET", "application/json",$email,$rest_api,$domain);
+           $result = agilecrm_get_data('forms/form?formId='.$atts["id"], $domain, $email, $rest_api);        
            $result = json_decode($result, false);
            $result = $result->formHtml;
           return $result;
@@ -1214,7 +1215,7 @@ function agilecrm_footer() {
     $webstats = get_option( "agile_webstats" );
     $pagewebrule = get_post_meta($post->ID, 'enable_webrule',true);
     $pagewebstats=get_post_meta($post->ID, 'enable_webstats',true);
-    $result = agilecrm_curl_wrap("subscription", null, "GET", "application/json",$email,$rest_api,$domain);
+    $result = agilecrm_get_data('subscription', $domain, $email, $rest_api);    
     $arr = json_decode($result, TRUE);
     $plantype = $arr['plan']['plan_type'];
     if($plantype == "FREE" && $domain){

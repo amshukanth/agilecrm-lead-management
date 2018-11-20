@@ -114,6 +114,9 @@ This version fixes a related bug.  Upgrade immediately.
 = 1.1 =
 This version fixes alias domain issue while tracking webstats.
 
+= 1.2 =
+Bug fixes.
+
 == Arbitrary section ==
 
 You may provide arbitrary sections, in the same format as the ones above.  This may be of use for extremely complicated
